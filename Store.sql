@@ -5,6 +5,45 @@ CREATE TABLE "Store" (
   "Min_Stock" INT NOT NULL CHECK ("Min_Stock" >= 0)
 );
 
+CREATE TABLE "Supplier" (
+  "Supplier_ID" SERIAL PRIMARY KEY,
+  "Supplier_Name" VARCHAR(100) NOT NULL,
+  "Email" VARCHAR(255) UNIQUE NOT NULL
+);
+
+CREATE TABLE "Customer" (
+  "Customer_ID" SERIAL PRIMARY KEY,
+  "F_Name" VARCHAR(50) NOT NULL,
+  "M_Name" VARCHAR(50),
+  "L_Name" VARCHAR(50) NOT NULL,
+  "Gender" CHAR(1) NOT NULL CHECK ("Gender" IN ('M', 'F', 'O')),
+  "Birth_Date" DATE NOT NULL CHECK ("Birth_Date" <= CURRENT_DATE),
+  "Email" VARCHAR(255) UNIQUE NOT NULL
+);
+
+CREATE TABLE "Employee" (
+  "Employee_ID" SERIAL PRIMARY KEY,
+  "Store_ID" INT NOT NULL REFERENCES "Store" ("Store_ID") ON DELETE RESTRICT,
+  "Storage_No" INT REFERENCES "Storage" ("Storage_No") ON DELETE SET NULL,
+  "F_Name" VARCHAR(50) NOT NULL,
+  "M_Name" VARCHAR(50),
+  "L_Name" VARCHAR(50) NOT NULL,
+  "Email" VARCHAR(255) UNIQUE NOT NULL,
+  "Gender" CHAR(1) NOT NULL CHECK ("Gender" IN ('M', 'F', 'O')),
+  "Role" VARCHAR(50) NOT NULL CHECK ("Role" IN ('Manager', 'Seller', 'Stockkeeper')),
+  "Supervisor" INT REFERENCES "Employee" ("Employee_ID") ON DELETE SET NULL
+);
+
+CREATE TABLE "Payment_Methods" (
+  "Payment_Method_ID" SERIAL PRIMARY KEY,
+  "Method_Name" VARCHAR(50) NOT NULL UNIQUE CHECK ("Method_Name" IN ('Cash', 'Credit', 'Debit', 'Online'))
+);
+
+CREATE TABLE "Categories" (
+  "Category_ID" SERIAL PRIMARY KEY,
+  "Category_Name" VARCHAR(50) NOT NULL UNIQUE
+);
+
 CREATE TABLE "Users" (
   "User_ID" SERIAL PRIMARY KEY,
   "Customer_ID" INT NOT NULL REFERENCES "Customer" ("Customer_ID") ON DELETE CASCADE,
@@ -23,29 +62,6 @@ CREATE TABLE "Sessions" ( -- New: Track logged-in users
   "Expires_At" TIMESTAMP NOT NULL
 );
 
-CREATE TABLE "Employee" (
-  "Employee_ID" SERIAL PRIMARY KEY,
-  "Store_ID" INT NOT NULL REFERENCES "Store" ("Store_ID") ON DELETE RESTRICT,
-  "Storage_No" INT REFERENCES "Storage" ("Storage_No") ON DELETE SET NULL,
-  "F_Name" VARCHAR(50) NOT NULL,
-  "M_Name" VARCHAR(50),
-  "L_Name" VARCHAR(50) NOT NULL,
-  "Email" VARCHAR(255) UNIQUE NOT NULL,
-  "Gender" CHAR(1) NOT NULL CHECK ("Gender" IN ('M', 'F', 'O')),
-  "Role" VARCHAR(50) NOT NULL CHECK ("Role" IN ('Manager', 'Seller', 'Stockkeeper')),
-  "Supervisor" INT REFERENCES "Employee" ("Employee_ID") ON DELETE SET NULL
-);
-
-CREATE TABLE "Customer" (
-  "Customer_ID" SERIAL PRIMARY KEY,
-  "F_Name" VARCHAR(50) NOT NULL,
-  "M_Name" VARCHAR(50),
-  "L_Name" VARCHAR(50) NOT NULL,
-  "Gender" CHAR(1) NOT NULL CHECK ("Gender" IN ('M', 'F', 'O')),
-  "Birth_Date" DATE NOT NULL CHECK ("Birth_Date" <= CURRENT_DATE),
-  "Email" VARCHAR(255) UNIQUE NOT NULL
-);
-
 CREATE TABLE "Addresses" ( -- New: Shipping info
   "Address_ID" SERIAL PRIMARY KEY,
   "Customer_ID" INT NOT NULL REFERENCES "Customer" ("Customer_ID") ON DELETE CASCADE,
@@ -55,12 +71,6 @@ CREATE TABLE "Addresses" ( -- New: Shipping info
   "Postal_Code" VARCHAR(20) NOT NULL,
   "Country" VARCHAR(50) NOT NULL,
   "Is_Default" BOOLEAN NOT NULL DEFAULT FALSE
-);
-
-CREATE TABLE "Supplier" (
-  "Supplier_ID" SERIAL PRIMARY KEY,
-  "Supplier_Name" VARCHAR(100) NOT NULL,
-  "Email" VARCHAR(255) UNIQUE NOT NULL
 );
 
 CREATE TABLE "Storage" (
@@ -97,11 +107,6 @@ CREATE TABLE "Reserved_Stock" ( -- New: Prevent overselling
   "Quantity" INT NOT NULL CHECK ("Quantity" > 0),
   "Reserved_At" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   "Expires_At" TIMESTAMP NOT NULL -- Cart timeout
-);
-
-CREATE TABLE "Payment_Methods" (
-  "Payment_Method_ID" SERIAL PRIMARY KEY,
-  "Method_Name" VARCHAR(50) NOT NULL UNIQUE CHECK ("Method_Name" IN ('Cash', 'Credit', 'Debit', 'Online'))
 );
 
 CREATE TABLE "Order" (
@@ -186,11 +191,6 @@ CREATE TABLE "Image" (
   "Image_ID" SERIAL PRIMARY KEY,
   "Product_ID" INT NOT NULL REFERENCES "Product" ("Product_ID") ON DELETE CASCADE,
   "Image_URL" TEXT NOT NULL
-);
-
-CREATE TABLE "Categories" (
-  "Category_ID" SERIAL PRIMARY KEY,
-  "Category_Name" VARCHAR(50) NOT NULL UNIQUE
 );
 
 CREATE TABLE "Product_Categories" (
