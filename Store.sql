@@ -21,6 +21,15 @@ CREATE TABLE "Customer" (
   "Email" VARCHAR(255) UNIQUE NOT NULL
 );
 
+CREATE TABLE "Storage" (
+  "Storage_No" SERIAL PRIMARY KEY,
+  "Store_ID" INT NOT NULL REFERENCES "Store" ("Store_ID") ON DELETE CASCADE,
+  "Location" VARCHAR(100) NOT NULL,
+  "Reorder_Level" INT NOT NULL CHECK ("Reorder_Level" >= 0),
+  "Max_Stock" INT NOT NULL CHECK ("Max_Stock" > "Reorder_Level"),
+  "Min_Stock" INT NOT NULL CHECK ("Min_Stock" <= "Reorder_Level")
+);
+
 CREATE TABLE "Employee" (
   "Employee_ID" SERIAL PRIMARY KEY,
   "Store_ID" INT NOT NULL REFERENCES "Store" ("Store_ID") ON DELETE RESTRICT,
@@ -73,14 +82,7 @@ CREATE TABLE "Addresses" ( -- New: Shipping info
   "Is_Default" BOOLEAN NOT NULL DEFAULT FALSE
 );
 
-CREATE TABLE "Storage" (
-  "Storage_No" SERIAL PRIMARY KEY,
-  "Store_ID" INT NOT NULL REFERENCES "Store" ("Store_ID") ON DELETE CASCADE,
-  "Location" VARCHAR(100) NOT NULL,
-  "Reorder_Level" INT NOT NULL CHECK ("Reorder_Level" >= 0),
-  "Max_Stock" INT NOT NULL CHECK ("Max_Stock" > "Reorder_Level"),
-  "Min_Stock" INT NOT NULL CHECK ("Min_Stock" <= "Reorder_Level")
-);
+
 
 CREATE TABLE "Product" (
   "Product_ID" SERIAL PRIMARY KEY,
@@ -109,7 +111,7 @@ CREATE TABLE "Reserved_Stock" ( -- New: Prevent overselling
   "Expires_At" TIMESTAMP NOT NULL -- Cart timeout
 );
 
-CREATE TABLE "Order" (
+CREATE TABLE "Customer_Order" (
   "Order_ID" SERIAL PRIMARY KEY,
   "Employee_Seller_ID" INT NOT NULL REFERENCES "Employee" ("Employee_ID") ON DELETE RESTRICT,
   "Customer_ID" INT NOT NULL REFERENCES "Customer" ("Customer_ID") ON DELETE RESTRICT,
@@ -121,7 +123,7 @@ CREATE TABLE "Order" (
 );
 
 CREATE TABLE "Order_Details" (
-  "Order_ID" INT NOT NULL REFERENCES "Order" ("Order_ID") ON DELETE CASCADE,
+  "Order_ID" INT NOT NULL REFERENCES "Customer_Order" ("Order_ID") ON DELETE CASCADE,
   "Product_ID" INT NOT NULL REFERENCES "Product" ("Product_ID") ON DELETE RESTRICT,
   "Quantity" INT NOT NULL CHECK ("Quantity" > 0),
   "Original_Price" DECIMAL(10, 2) NOT NULL CHECK ("Original_Price" >= 0),
@@ -132,7 +134,7 @@ CREATE TABLE "Order_Details" (
 
 CREATE TABLE "Return" (
   "Return_ID" SERIAL PRIMARY KEY,
-  "Order_ID" INT NOT NULL REFERENCES "Order" ("Order_ID") ON DELETE RESTRICT,
+  "Order_ID" INT NOT NULL REFERENCES "Customer_Order" ("Order_ID") ON DELETE RESTRICT,
   "Product_ID" INT NOT NULL REFERENCES "Product" ("Product_ID") ON DELETE RESTRICT,
   "Refunded_Amount" DECIMAL(10, 2) NOT NULL CHECK ("Refunded_Amount" >= 0),
   "Quantity_Returned" INT NOT NULL CHECK ("Quantity_Returned" > 0),
@@ -219,7 +221,7 @@ CREATE TABLE "Audit_Log" ( -- New: Track actions
   "Timestamp" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_order_customer ON "Order" ("Customer_ID");
+CREATE INDEX idx_order_customer ON "Customer_Order" ("Customer_ID");
 CREATE INDEX idx_order_product ON "Order_Details" ("Product_ID");
 CREATE INDEX idx_inventory_store_product ON "Store_Inventory" ("Store_ID", "Product_ID");
 CREATE INDEX idx_cart_customer ON "Cart" ("Customer_ID");
